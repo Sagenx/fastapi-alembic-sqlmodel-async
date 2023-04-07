@@ -79,7 +79,7 @@ This starts pgamin in [http://localhost:15432](http://localhost:15432).
   <img src="static/container_architecture.png" align="center"/>
 </p>
 
-As this project uses [traefik](https://doc.traefik.io/traefik/routing/routers/) as a reverse proxy, which uses namespaces routing, you can access the documentation with the following path [http://fastapi.localhost/docs](http://fastapi.localhost/docs)
+As this project uses [Caddy](https://caddyserver.com/) as a reverse proxy, which uses namespaces routing, you can access the documentation with the following path [http://fastapi.localhost/docs](http://fastapi.localhost/docs)
 
 ## Preview
   
@@ -90,18 +90,8 @@ As this project uses [traefik](https://doc.traefik.io/traefik/routing/routers/) 
   <img src="static/2.png" align="center"/>
 </p>
 
-## Traefik Dashboard
-Traefik has been configurated as a reverse proxy on the ingress of the project; you can access Traefik Dashboard using the following link [http://traefik.localhost/](http://traefik.localhost/). You should use **username: test** and **pass: test**. If you want to change the password, you can find more information on how to do it [here](https://doc.traefik.io/traefik/operations/api/)
-
-<p align="center">
-  <img src="static/traefik1.png" align="center"/>
-</p>
-<p align="center">
-  <img src="static/traefik2.png" align="center"/>
-</p>
-
 ## Static files
-All files on static folder will be served by nginx container as static files. You can check it with this link [http://nginx.localhost/1.png](http://nginx.localhost/1.png)
+All files on static folder will be served by Caddy container as static files. You can check it with this link [http://static.localhost](http://static.localhost)
 
 ## Minio server
 This template allows users can upload their photos. The images are stored using the open source Object Storage Service (OSS) [minio](https://min.io/), which provides storage of images using buckets in a secure way through presigned URLs.
@@ -110,6 +100,21 @@ This template allows users can upload their photos. The images are stored using 
 <p align="center">
   <img src="static/minio.png" align="center"/>
 </p>
+
+## Celery
+[Celery](https://docs.celeryq.dev/en/stable/getting-started/introduction.html) is a distributed task queue that allows developers to run asynchronous tasks in their applications. It is particularly useful for tasks that are time-consuming, require heavy computation or access external services, and can be run independently of the main application. It also offers features such as task scheduling, task prioritization, and retries in case of failure.
+
+[Celery Beat](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html) is an additional component of Celery that allows developers to schedule periodic tasks and intervals for their Celery workers. It provides an easy-to-use interface for defining task schedules and supports several scheduling options such as crontab, interval, and relative.
+
+You can see the architecture used in this project which uses Redis as celery broker and the current postgres database as celery backend. It also uses [celery-sqlalchemy-scheduler](https://github.com/AngelLiang/celery-sqlalchemy-scheduler) to store celery beats task into database so they can mutated.
+
+Within the **natural_language** endpoints, you can access a sample application that demonstrates not only synchronous prediction of machine learning models but also batch prediction. Additionally, there are examples of how to schedule periodic tasks using Celery Beat in the **periodic_tasks** endpoints.
+
+
+<p align="center">
+  <img src="static/celery_diagram.png" align="center"/>
+</p>
+
 
 ## Run Alembic migrations (Only if you change the DB model)
 
@@ -239,6 +244,8 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [pgadmin Makefile](https://gist.github.com/alldevic/b2a0573e5464fe91fd118024f33bcbaa).
 - [Styling and makefiles](https://github.com/RasaHQ/rasa).
 - [awesome-fastapi](https://github.com/mjhea0/awesome-fastapi).
+- [Serving ML Models in Production with FastAPI and Celery](https://towardsdatascience.com/deploying-ml-models-in-production-with-fastapi-and-celery-7063e539a5db)
+- [Database detup](https://christophergs.com/tutorials/ultimate-fastapi-tutorial-pt-7-sqlalchemy-database-setup/)
 
 ## TODO List:
 
@@ -248,8 +255,7 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [x] Add JWT authentication
 - [x] Add Pagination
 - [x] Add User birthday field with timezone
-- [x] Add reverse proxy (traefik) with docker compose
-- [x] Add static server with nginx
+- [x] Add static server
 - [x] Add basic RBAC (Role base access control)
 - [x] Add sample heroes, teams and groups on init db
 - [x] Add cache configuration using fastapi-cache2 and redis
@@ -271,12 +277,17 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [x] Add docstrings
 - [x] Install pg_trgm by code and add a query for smart search of users by name
 - [x] Upgrade typing (Compatible just with python > 3.10)
+- [x] Add sample transformers NLP models and use them globally
+- [x] Add Celery samples for tasks, and schedule tasks
+- [x] Migrate from traefik reverse proxy to Caddy reverse proxy for automatic ssl
 - [ ] Add a nextjs sample frontend
 - [ ] Add testing
 - [ ] Add jsonb field on table sample
-- [ ] Add AuthN and AuthZ using Keycloak
+- [ ] Make that celery-sqlalchemy-scheduler works async
+- [ ] Add AuthZ using oso
+- [ ] Add SSL to reverse proxy on prod
 - [ ] Add instructions on doc for production deployment using github actions and dockerhub (CI/CD)
-- [ ] Add Celery sample for tasks
+
 - [ ] Convert repo into template using cookiecutter
 
 

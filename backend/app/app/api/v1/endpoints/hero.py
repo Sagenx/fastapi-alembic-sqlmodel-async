@@ -1,6 +1,7 @@
 from uuid import UUID
+from app.api.celery_task import print_hero
 from app.utils.exceptions import IdNotFoundException, NameNotFoundException
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_pagination import Params
 from app import crud
 from app.api import deps
@@ -22,6 +23,7 @@ from app.schemas.response_schema import (
     create_response,
 )
 from app.schemas.role_schema import IRoleEnum
+from app.core.authz import is_authorized
 
 router = APIRouter()
 
@@ -67,6 +69,8 @@ async def get_hero_by_id(
     hero = await crud.hero.get(id=hero_id)
     if not hero:
         raise IdNotFoundException(Hero, hero_id)
+
+    print_hero.delay(hero.id)
     return create_response(data=hero)
 
 
@@ -78,10 +82,11 @@ async def get_hero_by_name(
     """
     Gets a hero by his/her name
     """
-    hero = await crud.hero.get_heroe_by_name(name=hero_name)
-    if not hero:
+    heroes = await crud.hero.get_heroe_by_name(name=hero_name)
+    if not heroes:
         raise NameNotFoundException(Hero, hero_name)
-    return create_response(data=hero)
+
+    return create_response(data=heroes)
 
 
 @router.post("")
@@ -120,6 +125,12 @@ async def update_hero(
     current_hero = await crud.hero.get(id=hero_id)
     if not current_hero:
         raise IdNotFoundException(Hero, hero_id)
+    if not is_authorized(current_user, "read", current_hero):
+        raise HTTPException(
+            status_code=403,
+            detail="You are not Authorized to update this heroe because you did not created it",
+        )
+
     heroe_updated = await crud.hero.update(obj_new=hero, obj_current=current_hero)
     return create_response(data=heroe_updated)
 
