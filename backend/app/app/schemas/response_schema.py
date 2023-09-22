@@ -3,6 +3,7 @@ from typing import Any, Generic, TypeVar
 from collections.abc import Sequence
 from fastapi_pagination import Params, Page
 from fastapi_pagination.bases import AbstractPage, AbstractParams
+from pydantic import Field
 from pydantic.generics import GenericModel
 
 DataType = TypeVar("DataType")
@@ -10,9 +11,10 @@ T = TypeVar("T")
 
 
 class PageBase(Page[T], Generic[T]):
-    pages: int
-    next_page: int | None
-    previous_page: int | None
+    previous_page: int | None = Field(
+        None, description="Page number of the previous page"
+    )
+    next_page: int | None = Field(None, description="Page number of the next page")
 
 
 class IResponseBase(GenericModel, Generic[T]):
@@ -21,7 +23,7 @@ class IResponseBase(GenericModel, Generic[T]):
     data: T | None
 
 
-class IResponsePage(AbstractPage[T], Generic[T]):
+class IGetResponsePaginated(AbstractPage[T], Generic[T]):
     message: str | None = ""
     meta: dict = {}
     data: PageBase[T]
@@ -41,7 +43,7 @@ class IResponsePage(AbstractPage[T], Generic[T]):
             pages = 0
 
         return cls(
-            data=PageBase(
+            data=PageBase[T](
                 items=items,
                 page=params.page,
                 size=params.size,
@@ -54,10 +56,6 @@ class IResponsePage(AbstractPage[T], Generic[T]):
 
 
 class IGetResponseBase(IResponseBase[DataType], Generic[DataType]):
-    message: str | None = "Data got correctly"
-
-
-class IGetResponsePaginated(IResponsePage[DataType], Generic[DataType]):
     message: str | None = "Data got correctly"
 
 
@@ -74,11 +72,18 @@ class IDeleteResponseBase(IResponseBase[DataType], Generic[DataType]):
 
 
 def create_response(
-    data: DataType | None,
+    data: DataType,
     message: str | None = None,
     meta: dict | Any | None = {},
-) -> dict[str, DataType] | DataType:
-    if isinstance(data, IResponsePage):
+) -> (
+    IResponseBase[DataType]
+    | IGetResponsePaginated[DataType]
+    | IGetResponseBase[DataType]
+    | IPutResponseBase[DataType]
+    | IDeleteResponseBase[DataType]
+    | IPostResponseBase[DataType]
+):
+    if isinstance(data, IGetResponsePaginated):
         data.message = "Data paginated correctly" if message is None else message
         data.meta = meta
         return data

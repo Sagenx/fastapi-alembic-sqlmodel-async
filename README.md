@@ -1,6 +1,40 @@
 # Async configuration for FastAPI and SQLModel
 
-This is a project template which uses [FastAPI](https://fastapi.tiangolo.com/), [Alembic](https://alembic.sqlalchemy.org/en/latest/) and async [SQLModel](https://sqlmodel.tiangolo.com/) as ORM. It shows a complete async CRUD template using authentication. Our implementation utilizes the newest version of FastAPI and incorporates typing hints that are fully compatible with **Python 3.10** and later versions.
+This is a project template which uses [FastAPI](https://fastapi.tiangolo.com/), [Alembic](https://alembic.sqlalchemy.org/en/latest/) and async [SQLModel](https://sqlmodel.tiangolo.com/) as ORM. It shows a complete async CRUD template using authentication. Our implementation utilizes the newest version of FastAPI and incorporates typing hints that are fully compatible with **Python 3.10** and later versions. If you're looking to build modern and efficient web applications with Python, this template will provide you with the necessary tools to get started quickly. You can read a short article with the motivations of starting this project in [Our Journey Using Async FastAPI](https://medium.com/allient/our-journey-using-async-fastapi-to-harnessing-the-power-of-modern-web-apis-90301827f14c?source=friends_link&sk=9006b3f2a4137a28a8576a69546c8c18). If you are looking for a started template CLI, I recommend you to use [create-fastapi-project](https://github.com/allient/create-fastapi-project)
+
+## Why Use This Template?
+
+Developing web applications can be a challenging process, especially when dealing with databases, authentication, asynchronous tasks, and other complex components. Our template is designed to simplify this process and offer you a solid starting point. Some of the highlights of this template include:
+
+- FastAPI Integration: FastAPI is a modern and efficient web framework that allows you to quickly and easily create APIs. This template uses the latest features of FastAPI and offers type hints that are compatible with **Python 3.10** and later versions.
+- Asynchronous Database Management: We use SQLModel, an asynchronous ORM library, to interact with the database efficiently and securely.
+- Asynchronous Tasks with Celery: This template includes examples of how to execute asynchronous and scheduled tasks using Celery, which is ideal for operations that require significant time or resources.
+- Authentication and Authorization: We implement JWT-based authentication and role-based access control to ensure that your APIs are secure and protected.
+- Documentation and Automated Testing: The template is configured to automatically generate interactive documentation for your APIs. It also includes automated tests using pytest to ensure code quality.
+- Development Best Practices: We apply code formatting, type checking, and static analysis tools to ensure that the code is readable, robust, and reliable.
+
+## Table of Contents
+1. [Set environment variables](#set-environment-variables)
+2. [Run the project using Docker containers and forcing build containers](#run-the-project-using-docker-containers-and-forcing-build-containers)
+3. [Run project using Docker containers](#run-project-using-docker-containers)
+4. [Setup database with initial data](#setup-database-with-initial-data)
+5. [ERD Database model](#erd-database-model)
+6. [Containers architecture](#containers-architecture)
+7. [Preview](#preview)
+8. [Static files](#static-files)
+9. [Minio server](#minio-server)
+10. [Celery](#celery)
+11. [Run Alembic migrations (Only if you change the DB model)](#run-alembic-migrations-only-if-you-change-the-db-model)
+12. [Production Deployment](#production-deployment)
+13. [Database unique IDs](#database-unique-ids)
+14. [Code Style](#code-style)
+15. [SonarQube static analysis](#sonarqube-static-analysis)
+16. [Testing](#testing)
+17. [Type checker](#type-checker)
+18. [Basic chatbot example with Langchain and OpenAI](#basic-chatbot-example-with-langchain-and-openai)
+19. [Inspiration and References](#inspiration-and-references)
+20. [TODO List](#todo-list)
+21. [License](#license)
 
 ## Set environment variables
 
@@ -229,6 +263,57 @@ make run-sonar-scanner
 
 When the build is successful, you can see the SonarQube screen automatically refreshed with the analysis. If you want to export a report, you can check this [this post](https://medium.com/jrtec/static-analysis-using-sonarqube-in-a-react-webapp-dd4b335d6062).
 
+## Testing
+Testing in FastAPI with pytest involves creating test functions that simulate HTTP requests to the API endpoints and verifying the responses. This approach allows us to conduct both unit tests for individual functions and integration tests for the entire application.
+
+To perform tests in this project, we utilize two essential libraries: [pytest](https://github.com/pytest-dev/pytest) and [pytest-asyncio](https://github.com/pytest-dev/pytest-asyncio).
+
+However, when testing FastAPI endpoints that utilize async connections with the database and a pool strategy, there is a trick to be aware of. The recommended approach is to create an isolated testing environment that connects to the database using the "poolclass": NullPool parameter on the engine. This helps to avoid potential issues related to tasks being attached to different loops. For more details on this, you can refer to the following references: [Fastapi testing RuntimeError: Task attached to a different loop](https://stackoverflow.com/questions/75252097/fastapi-testing-runtimeerror-task-attached-to-a-different-loop/75444607#75444607) and [Connection Pooling](https://docs.sqlalchemy.org/en/20/core/pooling.html#api-documentation-available-pool-implementations).
+
+
+To execute the tests, follow these steps:
+
+
+
+1. Start the testing environment using the command:
+
+```sh
+make run-test
+```
+2. Once the testing environment is up and running, open another terminal and run the tests with the following command:
+
+```sh
+make pytest
+```
+
+## Type checker
+Python's type hints, introduced in PEP 484 and fully embraced in later versions of Python, allow you to specify the expected types of variables, function parameters, and return values. It is really good how fastapi documentation promotes type hints so this code base tryies to use this tool the most posible because type hints make the code more self-documenting by providing clear information about what types of values a function or variable can hold and they catch type-related errors at compile time, before the code is executed.
+
+This project uses [mypy](https://mypy-lang.org/) a popular static type checker for Python. If you want to change the config rules you can edit the rules in the  *pyproject.toml* file.
+
+To execute Type checking, run this command:
+
+```sh
+make mypy
+```
+
+## Basic chatbot example with Langchain and OpenAI
+In addition to its core features, this project template demonstrates how to integrate an basic chatbot powered by Langchain and OpenAI through websockets.
+
+To begin experimenting with the basic chatbot, follow these steps:
+
+1. **Obtain an OpenAI API Key**: You'll need to set the `OPENAI_API_KEY` environment variable, which you can obtain from [OpenAI's platform](https://platform.openai.com/).
+
+2. **Test Websocket Connection**: You can test the websocket connection by using the following URL: [ws://fastapi.localhost/chat/\<USER_ID\>](ws://fastapi.localhost/chat/<USER_ID>). Replace `<USER_ID>` with a user identifier of your choice.
+
+3. **Sending and Receiving Messages**: You should be able to send messages to the chatbot using the provided websocket connection. To do this, use the following message structure:
+   
+   ```json
+   {"message":"Hello world"}
+   ```
+   Once you send a message, the chatbot will respond with generated responses based on the content of your input.
+
+
 ## Inspiration and References
 
 - [full-stack-fastapi-postgresql](https://github.com/tiangolo/full-stack-fastapi-postgresql).
@@ -246,6 +331,7 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [awesome-fastapi](https://github.com/mjhea0/awesome-fastapi).
 - [Serving ML Models in Production with FastAPI and Celery](https://towardsdatascience.com/deploying-ml-models-in-production-with-fastapi-and-celery-7063e539a5db)
 - [Database detup](https://christophergs.com/tutorials/ultimate-fastapi-tutorial-pt-7-sqlalchemy-database-setup/)
+- [Dispatch](https://github.com/Netflix/dispatch)
 
 ## TODO List:
 
@@ -282,6 +368,8 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [x] Migrate from traefik reverse proxy to Caddy reverse proxy for automatic ssl
 - [x] Add fastapi limiter to natural language endpoints
 - [x] Add websocket conneting with chatgpt
+- [x] Setup testing configuracion
+- [x] Add sample composition using pydantic
 - [ ] Add a nextjs sample frontend
 - [ ] Add testing
 - [ ] Add jsonb field on table sample
@@ -289,8 +377,11 @@ When the build is successful, you can see the SonarQube screen automatically ref
 - [ ] Add AuthZ using oso
 - [ ] Add SSL to reverse proxy on prod
 - [ ] Add instructions on doc for production deployment using github actions and dockerhub (CI/CD)
-
 - [ ] Convert repo into template using cookiecutter
+
+### Support and Maintenance
+
+`fastapi-alembic-sqlmodel-async` is supported by the [Allient development team](https://www.allient.io/). Our team is composed by a experienced professionals specializing in FastAPI projects and NLP. If you need assistance or support for your project, please don't hesitate to get in touch with us at [info@allient.io](mailto:info@allient.io) or schedule a meeting with us [here](https://calendly.com/jonathanvargas).
 
 
 PR are welcome ❤️

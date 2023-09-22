@@ -97,6 +97,10 @@ lint:
 	cd backend/app && \
 	poetry run ruff app && poetry run black --check app
 
+mypy:
+	cd backend/app && \
+	poetry run mypy .
+
 lint-watch:
 	cd backend/app && \
 	poetry run ruff app --watch
@@ -129,3 +133,9 @@ load-server-pgadmin:
 
 clean-pgadmin:
 	docker volume rm pgadmin_data
+
+run-test:
+	docker compose -f docker-compose-test.yml up --build
+
+pytest:
+	docker compose -f docker-compose-test.yml exec fastapi_server pytest
