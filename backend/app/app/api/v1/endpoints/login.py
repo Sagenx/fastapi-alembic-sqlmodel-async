@@ -73,6 +73,8 @@ async def login(
             settings.REFRESH_TOKEN_EXPIRE_MINUTES,
         )
 
+    print("data", data)
+    print("meta_data", meta_data)
     return create_response(meta=meta_data, data=data, message="Login correctly")
 
 
@@ -156,7 +158,7 @@ async def get_new_access_token(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Error when decoding the token. Please check your request.",
         )
-    except MissingRequiredClaimError as e:
+    except MissingRequiredClaimError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="There is no required field in your token. Please contact the administrator.",

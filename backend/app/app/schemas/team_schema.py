@@ -10,14 +10,14 @@ class ITeamCreate(TeamBase):
 
 
 # All these fields are optional
-@optional
+@optional()
 class ITeamUpdate(TeamBase):
     pass
 
 
 class ITeamRead(TeamBase):
     id: UUID
-    created_by: IUserBasicInfo | None = None
+    created_by: IUserBasicInfo
 
 
 class ITeamReadWithHeroes(ITeamRead):

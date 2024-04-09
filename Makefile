@@ -38,6 +38,8 @@ help:
 	@echo "        Init database with sample data."	
 	@echo "    add-dev-migration"
 	@echo "        Add new database migration using alembic."
+	@echo "    upgrade-migration"
+	@echo "        This helps to upgrade pending migrations."	
 	@echo "    run-pgadmin"
 	@echo "        Run pgadmin4."	
 	@echo "    load-server-pgadmin"
@@ -123,13 +125,14 @@ add-dev-migration:
 	docker compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head && \
 	echo "Migration added and applied."
 
+upgrade-migration:	
+	docker compose -f docker-compose-dev.yml exec fastapi_server alembic upgrade head && \
+	echo "Migration upgraded."
+
 run-pgadmin:
 	echo "$$SERVERS_JSON" > ./pgadmin/servers.json && \
 	docker volume create pgadmin_data && \
 	docker compose -f pgadmin.yml up --force-recreate
-	
-load-server-pgadmin:
-	docker exec -it pgadmin python /pgadmin4/setup.py --load-servers servers.json
 
 clean-pgadmin:
 	docker volume rm pgadmin_data

@@ -2,9 +2,8 @@ from fastapi import HTTPException
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 from app.schemas.common_schema import IOrderEnum
-from fastapi_pagination.ext.async_sqlalchemy import paginate
+from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_async_sqlalchemy import db
-from fastapi_async_sqlalchemy.middleware import DBSessionMeta
 from fastapi_pagination import Params, Page
 from pydantic import BaseModel
 from sqlmodel import SQLModel, select, func
@@ -30,7 +29,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
         self.db = db
 
-    def get_db(self) -> DBSessionMeta:
+    def get_db(self) -> type(db):
         return self.db
 
     async def get(
@@ -86,7 +85,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_session = db_session or self.db.session
         if query is None:
             query = select(self.model)
-        return await paginate(db_session, query, params)
+
+        output = await paginate(db_session, query, params)
+        return output
 
     async def get_multi_paginated_ordered(
         self,
@@ -154,7 +155,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db_session: AsyncSession | None = None,
     ) -> ModelType:
         db_session = db_session or self.db.session
-        db_obj = self.model.from_orm(obj_in)  # type: ignore
+        db_obj = self.model.model_validate(obj_in)  # type: ignore
 
         if created_by_id:
             db_obj.created_by_id = created_by_id

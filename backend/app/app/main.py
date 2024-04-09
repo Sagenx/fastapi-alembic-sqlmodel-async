@@ -17,11 +17,10 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi_limiter import FastAPILimiter
 from fastapi_limiter.depends import WebSocketRateLimiter
-from fastapi_pagination import add_pagination
 from jwt import DecodeError, ExpiredSignatureError, MissingRequiredClaimError
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage
-from sqlalchemy.pool import NullPool, QueuePool
+from sqlalchemy.pool import NullPool, AsyncAdaptedQueuePool
 from starlette.middleware.cors import CORSMiddleware
 from transformers import pipeline
 
@@ -115,15 +114,15 @@ app = FastAPI(
 
 app.add_middleware(
     SQLAlchemyMiddleware,
-    db_url=settings.ASYNC_DATABASE_URI,
+    db_url=str(settings.ASYNC_DATABASE_URI),
     engine_args={
         "echo": False,
+        "poolclass": NullPool
+        if settings.MODE == ModeEnum.testing
+        else AsyncAdaptedQueuePool
         # "pool_pre_ping": True,
         # "pool_size": settings.POOL_SIZE,
         # "max_overflow": 64,
-        "poolclass": NullPool
-        if settings.MODE == ModeEnum.testing
-        else QueuePool,  # Asincio pytest works with NullPool
     },
 )
 app.add_middleware(GlobalsMiddleware)
@@ -189,7 +188,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
                 # Receive and send back the client message
                 data = await websocket.receive_json()
                 await ws_ratelimit(websocket)
-                user_message = IUserMessage.parse_obj(data)
+                user_message = IUserMessage.model_validate(data)
                 user_message.user_id = user_id
 
                 resp = IChatResponse(
@@ -227,7 +226,7 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
                     message_id="",
                     id="",
                     sender="bot",
-                    message="Sorry, something went wrong. Your user limit of api usages has been reached.",
+                    message="Sorry, something went wrong. Your user limit of api usages has been reached or check your API key.",
                     type="error",
                 )
                 await websocket.send_json(resp.dict())
@@ -238,4 +237,3 @@ async def websocket_endpoint(websocket: WebSocket, user_id: UUID):
 
 # Add Routers
 app.include_router(api_router_v1, prefix=settings.API_V1_STR)
-add_pagination(app)
